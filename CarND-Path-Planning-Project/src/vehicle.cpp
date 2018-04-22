@@ -146,12 +146,25 @@ void Vehicle::update_available_states(bool car_to_left, bool car_to_right) {
      behavior for the "KL" state in the new lane. */
   //?????有点问题
   this->available_states = {"KL"};
-  if (this->d > 4 && !car_to_left) {
-    this->available_states.push_back("LCL");
+  if(this->d>0&&this->d<4)// in the left lane
+  {
+      if(!car_to_right) {this->available_states.push_back("LCR");}
   }
-  if (this->d < 8 && !car_to_right) {
-    this->available_states.push_back("LCR");
+  else if(this->d>4&&this->d<8)//in the middle lane
+  {
+      if(!car_to_right) {this->available_states.push_back("LCR");}
+      if(!car_to_left) {this->available_states.push_back("LCL");}
   }
+  else if(this->d>8) //in the left lane
+  {
+     if(!car_to_left) {this->available_states.push_back("LCL");}
+  }
+//  if (this->d > 4 && !car_to_left) {
+//    this->available_states.push_back("LCL");
+//  }
+//  if (this->d < 8 && !car_to_right) {
+//    this->available_states.push_back("LCR");
+//  }
 }
 
 vector<vector<double>> Vehicle::get_target_for_state(string state, map<int, vector<vector<double>>> predictions, double duration, bool car_just_ahead) {
@@ -160,8 +173,9 @@ vector<vector<double>> Vehicle::get_target_for_state(string state, map<int, vect
   // If no leading car found target lane, ego car will make up PERCENT_V_DIFF_TO_MAKE_UP of the difference
   // between current velocity and target velocity. If leading car is found set target s to FOLLOW_DISTANCE
   // and target s_dot to leading car's s_dot based on predictions
-  int target_lane, current_lane = this->d / 4; 
-  double target_d; 
+
+  int target_lane=1, current_lane = this->d / 4;
+  double target_d=0.0;
   // **** TARGETS ****
   // lateral displacement : depends on state
   // lateral velocity : 0
@@ -171,11 +185,13 @@ vector<vector<double>> Vehicle::get_target_for_state(string state, map<int, vect
   // longitudinal velocity : current velocity + max allowed accel * duration
   //???????为什么除以4
   double target_s_d = min(this->s_d + MAX_INSTANTANEOUS_ACCEL/4 * duration, SPEED_LIMIT);
-  target_s_d = SPEED_LIMIT;//???????/
+  //target_s_d = SPEED_LIMIT;//???????/
+
   // longitudinal acceleration : zero ?
-  double target_s_dd = 0;//???????
+   double target_s_dd = 0;//???????
   // longitudinal acceleration : difference between current/target velocity over trajectory duration?
   //double target_s_dd = (target_s_d - this->s_d) / (N_SAMPLES * DT);
+
   // longitudinal displacement : current displacement plus difference in current/target velocity times 
   // trajectory duration
   double target_s = this->s + (this->s_d + target_s_d) / 2 * duration;
@@ -198,16 +214,19 @@ vector<vector<double>> Vehicle::get_target_for_state(string state, map<int, vect
     target_lane = target_d / 4;
   }
   
-  // replace target_s variables if there is a leading vehicle close enough
+  // replace target_s variables if there is a leading vehicle close enough on target lane
+  //里面预测一段时间，得出可行驶行为情况下，other car的预测位置
   leading_vehicle_s_and_sdot = get_leading_vehicle_data_for_lane(target_lane, predictions, duration);
+
   double leading_vehicle_s = leading_vehicle_s_and_sdot[0];
-  if (leading_vehicle_s - target_s < FOLLOW_DISTANCE && leading_vehicle_s > this->s) {
+  //如果预测车的位置小于安全距离，设置s为安全距离，速度为预测车的速度
+  if (leading_vehicle_s - target_s < (FOLLOW_DISTANCE) && leading_vehicle_s > this->s) {
 
     target_s_d = leading_vehicle_s_and_sdot[1];
 
-    if (fabs(leading_vehicle_s - target_s) < 0.5 * FOLLOW_DISTANCE) {
+    if (fabs(leading_vehicle_s - target_s) < 0.7 * FOLLOW_DISTANCE) {
       //cout << "TOO CLOSE IN LANE " << target_lane << "!! current target speed: " << target_s_d;
-      target_s_d -= 1; // slow down if too close
+      target_s_d -= 2; // slow down if too close
       //cout << "  new target speed: " << target_s_d << endl;
     }
 
@@ -224,9 +243,10 @@ vector<vector<double>> Vehicle::get_target_for_state(string state, map<int, vect
 
   // emergency brake
   // s d 没有什么影响
-  if (car_just_ahead) {
-    target_s_d = 0.0;
-  }
+//  if (car_just_ahead)
+//  {
+//    target_s_d = 0.0;
+//  }
 
   return {{target_s, target_s_d, target_s_dd}, {target_d, target_d_d, target_d_dd}};
 }

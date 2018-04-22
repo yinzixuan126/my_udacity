@@ -413,12 +413,12 @@ int main() {
 					// }
 					// cout << endl;
 
-                    //在小于跟随距离的范围内，判断哪个车道有车
+                    //在小于跟随距离的范围内，判断哪个车道有车，但是并没有预测一段时间给予现有车的速度
 					bool car_to_left = false, car_to_right = false, car_just_ahead = false;
 					for (Vehicle other_car: other_cars) {
 						double s_diff = fabs(other_car.s - car_s);
                         //fllow distance 8m
-						if (s_diff < FOLLOW_DISTANCE) {
+                        if (s_diff < (FOLLOW_DISTANCE+5)) {
 							cout << "s diff: " << s_diff << endl;
 							double d_diff = other_car.d - car_d;
 							if (d_diff > 2 && d_diff < 6) {
@@ -468,6 +468,7 @@ int main() {
                         //内部有点问题
                         //target s 没有车正常，有车保持安全距离和速度
                         //target d 按照状态，选择变道
+                        //里面包含预测
                          vector<vector<double>> target_s_and_d = my_car.get_target_for_state(state, predictions, duration, car_just_ahead);
 
 						// // DEBUG

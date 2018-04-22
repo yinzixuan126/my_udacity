@@ -304,6 +304,7 @@ int main() {
             }
 
             // Behavior : Let's see what to do.
+            // 通过speed_diff 和lane 来实现taget s and d
             double speed_diff = 0;
             const double MAX_SPEED = 49.5;
             const double MAX_ACC = .224;
@@ -363,6 +364,7 @@ int main() {
             }
 
             // Setting up target points in the future.
+            //前面的behavior的lane在这里起作用
             vector<double> next_wp0 = getXY(car_s + 30, 2 + 4*lane, map_waypoints_s, map_waypoints_x, map_waypoints_y);
             vector<double> next_wp1 = getXY(car_s + 60, 2 + 4*lane, map_waypoints_s, map_waypoints_x, map_waypoints_y);
             vector<double> next_wp2 = getXY(car_s + 90, 2 + 4*lane, map_waypoints_s, map_waypoints_x, map_waypoints_y);
