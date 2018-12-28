@@ -136,6 +136,12 @@ int main() {
           Eigen::Map<Eigen::VectorXd> waypoints_y_eig(ptry, 6);
           // calculate cte and epsi
           auto coeffs = polyfit(waypoints_x_eig, waypoints_y_eig, 3);
+          // The cross track error is calculated by evaluating at polynomial at x, f(x)
+          // and subtracting y.
+          //double cte = polyeval(coeffs, x) - y;
+          // Due to the sign starting at 0, the orientation error is -f'(x).
+          // derivative of coeffs[0] + coeffs[1] * x -> coeffs[1]
+          //double epsi = psi - atan(coeffs[1]);
           double cte = polyeval(coeffs, 0);  // px = 0, py = 0
           double epsi = -atan(coeffs[1]);  // p
           //not using
